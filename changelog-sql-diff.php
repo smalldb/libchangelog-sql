@@ -30,7 +30,14 @@
 
 chdir('..');
 
+/* Check if this is development environment */
+define('DEVELOPMENT_ENVIRONMENT', !! getenv('DEVELOPMENT_ENVIRONMENT'));
+
 require('app/init.php');
+
+ini_set('log_errors', TRUE);
+ini_set('display_errors', FALSE);
+ini_set('error_reporting', E_ALL);
 
 header('Content-Type: text/plain; encoding=utf-8');
 
