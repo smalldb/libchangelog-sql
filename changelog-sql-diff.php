@@ -28,13 +28,16 @@
  * SUCH DAMAGE.
  */
 
-chdir('..');
+$changelog_dir = getcwd();
+chdir('../..');
 
 /* Check if this is development environment */
-define('DEVELOPMENT_ENVIRONMENT', !! getenv('DEVELOPMENT_ENVIRONMENT'));
+define('DEVELOPMENT_ENVIRONMENT', FALSE);
 
+require('core/utils.php');
 require('app/init.php');
 
+restore_error_handler();	// Nette's error handler is too stupid
 ini_set('log_errors', TRUE);
 ini_set('display_errors', FALSE);
 ini_set('error_reporting', E_ALL);
@@ -69,11 +72,10 @@ echo "Loading changelog.sql directory ... ";
 flush();
 
 $files = array();
-$changelog_dir = 'install/changelog.sql';
 
 if ($d = opendir($changelog_dir)) {
 	while (false !== ($f = readdir($d))) {
-		if ($f[0] != '.') {
+		if (preg_match('/^[^.].*\.sql(\.php)?$/', $f)) {
 			$out = null;
 			exec("git log -n 1 --pretty=format:%at -- \"".escapeshellcmd($changelog_dir.'/'.$f)."\"", $out, $ret);
 			if ($ret == 0) {
@@ -98,11 +100,21 @@ if ($d = opendir($changelog_dir)) {
 echo "Loading about_changelog table ... ";
 flush();
 
-$changelog = dibi::select('`filename`, UNIX_TIMESTAMP(MAX(`update_time`)) AS `update_time`')
-		->from('about_changelog')
-		->groupBy('`filename`')
-		->orderBy('`filename`, MAX(`id`)')
-		->fetchPairs('filename', 'update_time');
+// Try to create changelog table, so this will never fail
+dibi::query('
+	CREATE TABLE IF NOT EXISTS `T_About_Changelog` (
+		`IDAbout_Changelog` int(11) NOT NULL AUTO_INCREMENT,
+		`UpdateTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		`Filename` varchar(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+		PRIMARY KEY (`IDAbout_Changelog`)
+	);
+');
+
+$changelog = dibi::select('`Filename`, UNIX_TIMESTAMP(MAX(`UpdateTime`)) AS `UpdateTime`')
+		->from('T_About_Changelog')
+		->groupBy('`Filename`')
+		->orderBy('`Filename`, MAX(`IDAbout_Changelog`)')
+		->fetchPairs('Filename', 'UpdateTime');
 printf("%6d records loaded.\n", count($changelog));
 //print_r($changelog);
 
@@ -148,14 +160,14 @@ if (!empty($need_update) || !empty($need_exec)) {
 	if (!empty($need_update)) {
 		echo "\t-- Updated:\n";
 		foreach ($need_update as $f) {
-			echo "\tINSERT INTO `about_changelog` SET `filename` = ",
+			echo "\tINSERT INTO `T_About_Changelog` SET `Filename` = ",
 				dibi::getConnection()->getDriver()->escape($f, dibi::TEXT), ";\n";
 		}
 	}
 	if (!empty($need_exec)) {
 		echo "\t-- New:\n";
 		foreach ($need_exec as $f => $mtime) {
-			echo "\tINSERT INTO `about_changelog` SET `filename` = ", dibi::getConnection()->getDriver()->escape($f, dibi::TEXT), ";\n";
+			echo "\tINSERT INTO `T_About_Changelog` SET `Filename` = ", dibi::getConnection()->getDriver()->escape($f, dibi::TEXT), ";\n";
 		}
 	}
 }
