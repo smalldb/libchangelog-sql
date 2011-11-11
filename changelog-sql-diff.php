@@ -28,13 +28,6 @@
  * SUCH DAMAGE.
  */
 
-chdir('..');
-
-/* Check if this is development environment */
-define('DEVELOPMENT_ENVIRONMENT', !! getenv('DEVELOPMENT_ENVIRONMENT'));
-
-require('app/init.php');
-
 ini_set('log_errors', TRUE);
 ini_set('display_errors', FALSE);
 ini_set('error_reporting', E_ALL);
@@ -42,6 +35,24 @@ ini_set('error_reporting', E_ALL);
 header('Content-Type: text/plain; encoding=utf-8');
 
 echo "/*\n\n== Database upgrade check ==\n\n\n";
+
+
+chdir('..');
+
+/* Check if this is development environment */
+define('DEVELOPMENT_ENVIRONMENT', !! getenv('DEVELOPMENT_ENVIRONMENT'));
+
+/* Load core.ini.php */
+$core_cfg = parse_ini_file('app/core.ini.php', TRUE);
+
+/* Define constants */
+if (isset($core_cfg['define'])) {
+        foreach($core_cfg['define'] as $k => $v) {
+                define(strtoupper($k), $v);
+        }
+}
+
+require('app/init.php');
 
 echo "Checking for git ... ";
 ob_flush();
