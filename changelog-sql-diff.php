@@ -28,11 +28,11 @@
  * SUCH DAMAGE.
  */
 
-/* Log errors and show them as plain-text */
+// Log errors and show them as plain-text
 ini_set('log_errors', TRUE);
-ini_set('display_errors', TRUE);
+ini_set('display_errors', TRUE);	// disabled when loading app/init.php
 ini_set('html_errors', FALSE);
-ini_set('error_reporting', E_ALL);
+ini_set('error_reporting', E_ALL | E_STRICT);
 
 header('Content-Type: text/plain; encoding=utf-8');
 
@@ -41,21 +41,33 @@ echo "/*\n\n== Database upgrade check ==\n\n\n";
 
 chdir('..');
 
-/* Check if this is development environment */
-define('DEVELOPMENT_ENVIRONMENT', !! getenv('DEVELOPMENT_ENVIRONMENT'));
+// Do not use development environment
+define('DEVELOPMENT_ENVIRONMENT', NULL);
 
-/* Load core.ini.php */
+// Load core.ini.php
 $core_cfg = parse_ini_file('app/core.ini.php', TRUE);
 
-/* Define constants */
+// Define constants
 if (isset($core_cfg['define'])) {
         foreach($core_cfg['define'] as $k => $v) {
                 define(strtoupper($k), $v);
         }
 }
 
-require('app/init.php');
+// Load app/init.php, but hide errors
+echo "Executing app/init.php ... ";
+$old_display_errors = ini_get('display_errors');
+ini_set('display_errors', FALSE);
+if (include('app/init.php')) {
+	echo "done.\n\n";
+} else {
+	echo "failed!  Check server's error log.\n\n";
+	exit();
+}
+ini_set('display_errors', $old_display_errors);
 
+
+// Show current version
 echo "Checking for git ... ";
 ob_flush();
 exec("git --version", $out, $ret);
@@ -75,6 +87,7 @@ if (!empty($git_version)) {
 		echo "Current application version: ", $out[0], "\n\n";
 	}
 }
+
 
 // Load files
 
@@ -121,6 +134,7 @@ printf("%6d records loaded.\n", count($changelog));
 
 
 // Find updates
+
 flush();
 $need_update = array();
 
@@ -141,7 +155,9 @@ if (empty($git_version)) {
 	echo "\t", $f, str_repeat(' ', 45 - strlen($f)), " # by ", ($files[$f] - $changelog[$f]), " seconds\n";
 }
 
+
 // Find new files to process
+
 flush();
 $need_exec = array_diff_key($files, $changelog);
 
