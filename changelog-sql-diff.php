@@ -28,8 +28,10 @@
  * SUCH DAMAGE.
  */
 
+/* Log errors and show them as plain-text */
 ini_set('log_errors', TRUE);
-ini_set('display_errors', FALSE);
+ini_set('display_errors', TRUE);
+ini_set('html_errors', FALSE);
 ini_set('error_reporting', E_ALL);
 
 header('Content-Type: text/plain; encoding=utf-8');
