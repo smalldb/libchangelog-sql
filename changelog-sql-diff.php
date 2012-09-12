@@ -28,14 +28,14 @@
  * SUCH DAMAGE.
  */
 
+ob_start();
+
 // Log errors and show them as plain-text
 ini_set('log_errors', TRUE);
 ini_set('display_errors', TRUE);	// disabled when loading app/init.php
 ini_set('html_errors', FALSE);
 ini_set('error_reporting', E_ALL | E_STRICT);
 date_default_timezone_set('Europe/Prague');
-
-header('Content-Type: text/plain; encoding=utf-8');
 
 echo "/*\n\n== Database upgrade check ==\n\n\n";
 
@@ -76,10 +76,13 @@ if (include('app/init.php')) {
 }
 ini_set('display_errors', $old_display_errors);
 
+// Show progress...
+header('Content-Type: text/plain; encoding=utf-8');
+ob_end_flush();
 
 // Show current version
 echo "Checking for git ... ";
-ob_flush();
+flush();
 exec("git --version", $out, $ret);
 if ($ret == 0) {
 	$git_version = str_replace('git version ', '', $out[0]);
