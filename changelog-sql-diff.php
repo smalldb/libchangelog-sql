@@ -33,6 +33,7 @@ ini_set('log_errors', TRUE);
 ini_set('display_errors', TRUE);	// disabled when loading app/init.php
 ini_set('html_errors', FALSE);
 ini_set('error_reporting', E_ALL | E_STRICT);
+date_default_timezone_set('Europe/Prague');
 
 header('Content-Type: text/plain; encoding=utf-8');
 
@@ -40,6 +41,15 @@ echo "/*\n\n== Database upgrade check ==\n\n\n";
 
 
 chdir('..');
+
+// Autoloader for app classes
+spl_autoload_register(function ($class)
+{
+	/* Core */
+	$f = str_replace("\\", '/', strtolower($class)).'.php';
+	$cf = 'app/class/'.$f;
+	include($cf);
+});
 
 // Do not use development environment
 define('DEVELOPMENT_ENVIRONMENT', NULL);
@@ -103,7 +113,7 @@ if ($d = opendir($changelog_dir)) {
 			$out = null;
 			exec("git log -n 1 --pretty=format:%at -- \"".escapeshellcmd($changelog_dir.'/'.$f)."\"", $out, $ret);
 			if ($ret == 0) {
-				$files[$f] = (int) $out[0];
+				$files[$f] = (int) @ $out[0];
 			} else {
 				$files[$f] = 0;
 			}
