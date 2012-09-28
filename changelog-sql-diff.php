@@ -1,3 +1,4 @@
+#!/usr/bin/env php
 <?php
 /*
  * Copyright (c) 2011, Josef Kufner  <jk@frozen-doe.net>
@@ -28,53 +29,33 @@
  * SUCH DAMAGE.
  */
 
+$initial_chdir = '..';
+$changelog_dir = './database/changelog.sql';
+
+$dibi_options = array(
+	'driver'   => 'mysql',
+	'host'     => 'localhost',
+	'username' => 'username',
+	'password' => 'password',
+	'database' => 'databse',
+);
+
+/******************************************************************************/
+
+require('./lib/dibi.min.php');
+
 ob_start();
 
 // Log errors and show them as plain-text
 ini_set('log_errors', TRUE);
-ini_set('display_errors', TRUE);	// disabled when loading app/init.php
+ini_set('display_errors', TRUE);
 ini_set('html_errors', FALSE);
 ini_set('error_reporting', E_ALL | E_STRICT);
 date_default_timezone_set('Europe/Prague');
 
 echo "/*\n\n== Database upgrade check ==\n\n\n";
 
-
-chdir('..');
-
-// Autoloader for app classes
-spl_autoload_register(function ($class)
-{
-	/* Core */
-	$f = str_replace("\\", '/', strtolower($class)).'.php';
-	$cf = 'app/class/'.$f;
-	include($cf);
-});
-
-// Do not use development environment
-define('DEVELOPMENT_ENVIRONMENT', NULL);
-
-// Load core.ini.php
-$core_cfg = parse_ini_file('app/core.ini.php', TRUE);
-
-// Define constants
-if (isset($core_cfg['define'])) {
-        foreach($core_cfg['define'] as $k => $v) {
-                define(strtoupper($k), $v);
-        }
-}
-
-// Load app/init.php, but hide errors
-echo "Executing app/init.php ... ";
-$old_display_errors = ini_get('display_errors');
-ini_set('display_errors', FALSE);
-if (include('app/init.php')) {
-	echo "done.\n\n";
-} else {
-	echo "failed!  Check server's error log.\n\n";
-	exit();
-}
-ini_set('display_errors', $old_display_errors);
+chdir($initial_chdir);
 
 // Show progress...
 header('Content-Type: text/plain; encoding=utf-8');
@@ -93,10 +74,12 @@ if ($ret == 0) {
 }
 
 // Show application version
+$git_describe = null;
 if (!empty($git_version)) {
 	$out = null;
-	exec('git describe', $out, $ret);
+	exec('git describe 2>/dev/null', $out, $ret);
 	if ($ret == 0) {
+		$git_describe = @ $out[0];
 		echo "Current application version: ", $out[0], "\n\n";
 	}
 }
@@ -108,15 +91,17 @@ echo "Loading changelog.sql directory ... ";
 flush();
 
 $files = array();
-$changelog_dir = 'install/changelog.sql';
-
 if ($d = opendir($changelog_dir)) {
 	while (false !== ($f = readdir($d))) {
 		if ($f[0] != '.') {
 			$out = null;
-			exec("git log -n 1 --pretty=format:%at -- \"".escapeshellcmd($changelog_dir.'/'.$f)."\"", $out, $ret);
-			if ($ret == 0) {
-				$files[$f] = (int) @ $out[0];
+			if ($git_describe != null) {
+				exec("git log -n 1 --pretty=format:%at -- \"".escapeshellcmd($changelog_dir.'/'.$f)."\"", $out, $ret);
+				if ($ret == 0) {
+					$files[$f] = (int) @ $out[0];
+				} else {
+					$files[$f] = 0;
+				}
 			} else {
 				$files[$f] = 0;
 			}
@@ -132,18 +117,40 @@ if ($d = opendir($changelog_dir)) {
 //print_r($files);
 
 
+// Connect to database
+
+echo "Connecting to database ... ";
+flush();
+if (dibi::connect($dibi_options)) {
+	echo "ok\n\n";
+} else {
+	echo "failed!\n\n";
+	die();
+}
+
+
 // Load database
 
 echo "Loading about_changelog table ... ";
 flush();
 
-$changelog = dibi::select('`filename`, UNIX_TIMESTAMP(MAX(`update_time`)) AS `update_time`')
-		->from('about_changelog')
-		->groupBy('`filename`')
-		->orderBy('`filename`, MAX(`id`)')
-		->fetchPairs('filename', 'update_time');
-printf("%6d records loaded.\n", count($changelog));
-//print_r($changelog);
+try {
+	$changelog = dibi::select('`filename`, UNIX_TIMESTAMP(MAX(`update_time`)) AS `update_time`')
+			->from('about_changelog')
+			->groupBy('`filename`')
+			->orderBy('`filename`, MAX(`id`)')
+			->fetchPairs('filename', 'update_time');
+	printf("%6d records loaded.\n", count($changelog));
+	//print_r($changelog);
+}
+catch (Exception $ex) {
+	printf("Failed: %s\n\n", $ex->getMessage());
+	if (preg_match("/Table '.*.about_changelog' doesn't exist/", $ex->getMessage())) {
+		printf("Here is how table 'about_changelog' should look like:\n*/\n\n");
+		readfile($changelog_dir.'/0000-00-00-about_changelog.sql');
+	}
+	die();
+}
 
 
 // Find updates
