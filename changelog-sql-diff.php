@@ -64,7 +64,7 @@ ob_end_flush();
 // Show current version
 echo "Checking for git ... ";
 flush();
-exec("git --version", $out, $ret);
+exec("git --version 2>/dev/null", $out, $ret);
 if ($ret == 0) {
 	$git_version = str_replace('git version ', '', $out[0]);
 	echo "ok (", $git_version, ")\n";
