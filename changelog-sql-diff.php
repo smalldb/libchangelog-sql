@@ -29,20 +29,34 @@
  * SUCH DAMAGE.
  */
 
+/*
+ * Configuration
+ */
+
 $initial_chdir = '..';
 $changelog_dir = './database/changelog.sql';
+$timezone      = 'Europe/Prague';
 
-$dibi_options = array(
-	'driver'   => 'mysql',
-	'host'     => 'localhost',
-	'username' => 'username',
-	'password' => 'password',
-	'database' => 'databse',
-);
+// This creates database connection. Must return instance of PDO driver.
+function create_pdo_database_connection() {
+	// Load nette (use constant to stop it before launching application)
+	define('CHANGELOG_SQL_DIFF', true);
+	include './www/index.php';
+
+	// Get database connection from Nette's DI container
+	return $container->getService('database');
+}
+
+// Returns info about currently used database (it should be short string)
+function get_database_info($db) {
+	$r = $db->query('SELECT DATABASE()');
+	$name = $r->fetchColumn();
+	$r->closeCursor();
+	return sprintf("using database \"%s\"", $name);
+}
+
 
 /******************************************************************************/
-
-require('./lib/dibi.min.php');
 
 ob_start();
 
@@ -51,7 +65,7 @@ ini_set('log_errors', TRUE);
 ini_set('display_errors', TRUE);
 ini_set('html_errors', FALSE);
 ini_set('error_reporting', E_ALL | E_STRICT);
-date_default_timezone_set('Europe/Prague');
+date_default_timezone_set($timezone);
 
 echo "/*\n\n== Database upgrade check ==\n\n\n";
 
@@ -59,6 +73,18 @@ chdir($initial_chdir);
 
 // Show progress...
 header('Content-Type: text/plain; encoding=utf-8');
+
+// Connect to database
+echo "Connecting to database ... ";
+$db = create_pdo_database_connection();
+if ($db) {
+	echo "ok, ", get_database_info($db), "\n\n";
+} else {
+	echo "failed!\n\n";
+	die();
+}
+
+// This is first flush since Nette sucks
 ob_end_flush();
 
 // Show current version
@@ -67,10 +93,10 @@ flush();
 exec("git --version 2>/dev/null", $out, $ret);
 if ($ret == 0) {
 	$git_version = str_replace('git version ', '', $out[0]);
-	echo "ok (", $git_version, ")\n";
+	echo "ok (", $git_version, ")\n\n";
 } else {
 	$git_version = false;
-	echo "not available.\n";
+	echo "not available.\n\n";
 }
 
 // Show application version
@@ -117,29 +143,23 @@ if ($d = opendir($changelog_dir)) {
 //print_r($files);
 
 
-// Connect to database
-
-echo "Connecting to database ... ";
-flush();
-if (dibi::connect($dibi_options)) {
-	echo "ok\n\n";
-} else {
-	echo "failed!\n\n";
-	die();
-}
-
-
 // Load database
 
 echo "Loading about_changelog table ... ";
 flush();
 
 try {
-	$changelog = dibi::select('`filename`, UNIX_TIMESTAMP(MAX(`update_time`)) AS `update_time`')
-			->from('about_changelog')
-			->groupBy('`filename`')
-			->orderBy('`filename`, MAX(`id`)')
-			->fetchPairs('filename', 'update_time');
+	$result = $db->query('
+			SELECT `filename`, UNIX_TIMESTAMP(MAX(`update_time`)) AS `update_time`
+			FROM `about_changelog`
+			GROUP BY `filename`
+			ORDER BY `filename`, MAX(`id`)
+		');
+	$changelog = array();
+	foreach ($result as $row) {
+		$changelog[$row['filename']] = $row['update_time'];
+	}
+	$result->closeCursor();
 	printf("%6d records loaded.\n", count($changelog));
 	//print_r($changelog);
 }
@@ -198,13 +218,13 @@ if (!empty($need_update) || !empty($need_exec)) {
 		echo "\t-- Updated:\n";
 		foreach ($need_update as $f) {
 			echo "\tINSERT INTO `about_changelog` SET `filename` = ",
-				dibi::getConnection()->getDriver()->escape($f, dibi::TEXT), ";\n";
+				$db->quote($f, PDO::PARAM_STR), ";\n";
 		}
 	}
 	if (!empty($need_exec)) {
 		echo "\t-- New:\n";
 		foreach ($need_exec as $f => $mtime) {
-			echo "\tINSERT INTO `about_changelog` SET `filename` = ", dibi::getConnection()->getDriver()->escape($f, dibi::TEXT), ";\n";
+			echo "\tINSERT INTO `about_changelog` SET `filename` = ", $db->quote($f, PDO::PARAM_STR), ";\n";
 		}
 	}
 }
