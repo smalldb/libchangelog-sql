@@ -40,7 +40,7 @@ $timezone      = 'Europe/Prague';
 // This creates database connection. Must return instance of PDO driver.
 function create_pdo_database_connection() {
 	// Load nette (use constant to stop it before launching application)
-	define('CHANGELOG_SQL_DIFF', true);
+	define('EMBEDED_BOOTSTRAP', true);
 	include './www/index.php';
 
 	// Get database connection from Nette's DI container
