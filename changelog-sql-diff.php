@@ -29,55 +29,34 @@
  */
 
 ob_start();
+echo "/*\n\n== Database upgrade check ==\n\n";
+
+// Go to document root
+chdir(dirname(__FILE__).'/..');
+
+// Do not use development environment
+define('DEVELOPMENT_ENVIRONMENT', NULL);
+
+// Call core init file
+require('core/init.php');
+
+// Call app's init file(s)
+if (!empty($core_cfg['core']['app_init_file'])) {
+        foreach((array) $core_cfg['core']['app_init_file'] as $f) {
+                require(DIR_ROOT.$f);
+        }
+}
 
 // Log errors and show them as plain-text
 ini_set('log_errors', TRUE);
 ini_set('display_errors', TRUE);	// disabled when loading app/init.php
 ini_set('html_errors', FALSE);
 ini_set('error_reporting', E_ALL | E_STRICT);
-date_default_timezone_set('Europe/Prague');
-
-echo "/*\n\n== Database upgrade check ==\n\n\n";
-
-
-chdir('..');
-
-// Autoloader for app classes
-spl_autoload_register(function ($class)
-{
-	/* Core */
-	$f = str_replace("\\", '/', strtolower($class)).'.php';
-	$cf = 'app/class/'.$f;
-	include($cf);
-});
-
-// Do not use development environment
-define('DEVELOPMENT_ENVIRONMENT', NULL);
-
-// Load core.ini.php
-$core_cfg = parse_ini_file('app/core.ini.php', TRUE);
-
-// Define constants
-if (isset($core_cfg['define'])) {
-        foreach($core_cfg['define'] as $k => $v) {
-                define(strtoupper($k), $v);
-        }
-}
-
-// Load app/init.php, but hide errors
-echo "Executing app/init.php ... ";
-$old_display_errors = ini_get('display_errors');
-ini_set('display_errors', FALSE);
-if (include('app/init.php')) {
-	echo "done.\n\n";
-} else {
-	echo "failed!  Check server's error log.\n\n";
-	exit();
-}
-ini_set('display_errors', $old_display_errors);
 
 // Show progress...
 header('Content-Type: text/plain; encoding=utf-8');
+
+echo "\n";
 ob_end_flush();
 
 // Show current version
