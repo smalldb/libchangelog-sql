@@ -1,0 +1,33 @@
+#!/bin/sh
+
+# check args
+if [ -z "$1" ]
+then
+    echo "Usage: $0 name-of-change" >&2
+    exit 1
+fi
+
+# build filename
+file="`date +'%Y-%m-%d'`-$1.sql"
+
+# check if file exists
+if [ -e "$file" ]
+then
+    echo "$file: File already exists" >&2
+    exit 2
+fi
+
+
+# generate file
+cat >"$file"  <<eof
+
+
+--
+INSERT INTO \`about_changelog\`
+SET \`filename\` = '$file';
+
+eof
+
+# open editor
+exec $EDITOR "$file"
+

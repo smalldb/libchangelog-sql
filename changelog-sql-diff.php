@@ -119,7 +119,7 @@ flush();
 $files = array();
 if ($d = opendir($changelog_dir)) {
 	while (false !== ($f = readdir($d))) {
-		if ($f[0] != '.') {
+		if (preg_match('/[^.].+\.sql$/', $f)) {
 			$out = null;
 			if ($git_describe != null) {
 				exec("git log -n 1 --pretty=format:%at -- \"".escapeshellcmd($changelog_dir.'/'.$f)."\"", $out, $ret);
@@ -192,7 +192,7 @@ if (empty($git_version)) {
 } else if (empty($need_update)) {
 	echo "\t(nothing updated)\n";
 } else foreach ($need_update as $f) {
-	echo "\t", $f, str_repeat(' ', 45 - strlen($f)), " # by ", ($files[$f] - $changelog[$f]), " seconds\n";
+	echo "\t", $f, str_repeat(' ', 50 - strlen($f)), " # by ", ($files[$f] - $changelog[$f]), " seconds\n";
 }
 
 
@@ -212,17 +212,17 @@ if (empty($need_exec)) {
 if (!empty($need_update) || !empty($need_exec)) {
 	echo "\n\n",
 		"If you had problems with files listed above and solved that manualy,\n",
-		"there are SQL queries to mark them processed (refresh page before use):\n\n";
+		"there are SQL queries to mark them processed (refresh page before use):\n";
 
 	if (!empty($need_update)) {
-		echo "\t-- Updated:\n";
+		echo "\n\t-- Updated:\n";
 		foreach ($need_update as $f) {
 			echo "\tINSERT INTO `about_changelog` SET `filename` = ",
 				$db->quote($f, PDO::PARAM_STR), ";\n";
 		}
 	}
 	if (!empty($need_exec)) {
-		echo "\t-- New:\n";
+		echo "\n\t-- New:\n";
 		foreach ($need_exec as $f => $mtime) {
 			echo "\tINSERT INTO `about_changelog` SET `filename` = ", $db->quote($f, PDO::PARAM_STR), ";\n";
 		}
