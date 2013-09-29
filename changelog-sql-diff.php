@@ -40,13 +40,6 @@ define('DEVELOPMENT_ENVIRONMENT', NULL);
 // Call core init file
 require('core/init.php');
 
-// Call app's init file(s)
-if (!empty($core_cfg['core']['app_init_file'])) {
-        foreach((array) $core_cfg['core']['app_init_file'] as $f) {
-                require(DIR_ROOT.$f);
-        }
-}
-
 // Log errors and show them as plain-text
 ini_set('log_errors', TRUE);
 ini_set('display_errors', TRUE);	// disabled when loading app/init.php
