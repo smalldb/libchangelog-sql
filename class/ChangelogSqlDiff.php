@@ -36,8 +36,6 @@ class ChangelogSqlDiff
 	 * Constructor.
 	 *
 	 * @param $pdo is PDO instance connected to database.
-	 * @param $changelog_table is name of SQL table containing performed changes.
-	 * @param $changelog_dir is name of directory where SQL scripts are located.
 	 */
 	public function __construct($pdo)
 	{
