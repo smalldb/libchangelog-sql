@@ -92,11 +92,9 @@ try {
 }
 catch (\Exception $ex) {
 	printf("Failed: %s\n\n", $ex->getMessage());
-	if (preg_match("/Table '.*.about_changelog' doesn't exist/", $ex->getMessage())) {
-		printf("Here is how table 'about_changelog' should look like:\n\x2A/\n\n");
-		readfile($changelog_dir.'/0000-00-00-about_changelog.sql');
+	if (!preg_match("/Table '.*.about_changelog' doesn't exist/", $ex->getMessage())) {
+		die();
 	}
-	die();
 }
 
 
