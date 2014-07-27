@@ -43,6 +43,14 @@ SET `filename` = '0000-00-00-about_changelog.sql';
 @warning Do not forget final semicolon (;).
 
 
+Init scripts
+------------
+
+In `app/database/changelog.sql/init` directory can be placed scripts which
+should be executed every time something is changed in database. Place custom
+functions here.
+
+
 
 License
 -------

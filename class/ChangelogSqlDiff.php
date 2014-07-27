@@ -23,13 +23,14 @@ namespace Cascade\ChangelogSql;
  */
 class ChangelogSqlDiff
 {
-	protected $pdo;			///< PDO database driver
+	protected $pdo;				///< PDO database driver
 
-	protected $scripts = array();	///< SQL scripts from changelog.
-	protected $changelog = array();	///< List of completed scripts (loaded from database).
+	protected $scripts = array();		///< SQL scripts from changelog.
+	protected $changelog = array();		///< List of completed scripts (loaded from database).
+	protected $init_scripts = array();	///< SQL scripts from init directory.
 
-	protected $needs_update = null;	///< List of scripts which needs to be manualy updated.
-	protected $needs_exec = null;	///< List of scripts which needs to be executed.
+	protected $needs_update = null;		///< List of scripts which needs to be manualy updated.
+	protected $needs_exec = null;		///< List of scripts which needs to be executed.
 
 
 	/**
@@ -172,5 +173,47 @@ class ChangelogSqlDiff
 		return $this->scripts[$script]['sql'];
 	}
 
+
+	/**
+	 * Load scripts with init files
+	 */
+	public function loadInitScriptsDir($dir)
+	{
+		if ($d = opendir($dir)) {
+			while (false !== ($f = readdir($d))) {
+				if (preg_match('/[^.].+\.sql$/', $f)) {
+					$filename = "$dir/$f";
+					$this->init_scripts[$f] = array(
+						'file' => $filename,
+						'sql' => file_get_contents($filename),
+					);
+				}
+			}
+			closedir($d);
+			ksort($this->init_scripts);
+			//debug_dump($this->scripts);
+		} else {
+			throw new \RuntimeException(sprintf('Can\'t open init scripts directory: '.$dir));
+		}
+
+		return count($this->scripts);
+	}
+
+	/**
+	 * Get list of init scripts to execute.
+	 */
+	public function initScripts()
+	{
+		return array_keys($this->init_scripts);
+	}
+
+
+	/**
+	 * Get content of the SQL init script.
+	 */
+	public function getInitScriptSql($script)
+	{
+		return $this->init_scripts[$script]['sql'];
+	}
 }
 

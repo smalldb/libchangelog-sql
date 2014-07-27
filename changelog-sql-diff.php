@@ -150,6 +150,14 @@ if (empty($need_update) && !empty($need_exec)) {
 	echo "\n\n",
 		"If everything looks fine, just copy following SQL code to your database. This text\n",
 		"and everything above is commented out, so 'Ctrl+A, Ctrl+C' will do the job.\n*/\n\n";
+	if (is_dir($changelog_dir.'/init')) {
+		$diff->loadInitScriptsDir($changelog_dir.'/init');
+		foreach ($diff->initScripts() as $f) {
+			echo "\n-- === Init Begin: ", $f, " ", str_repeat("=", 60 - strlen($f)), "\n\n";
+			echo $diff->getInitScriptSql($f);
+			echo "\n-- === Init End: ", $f, " ", str_repeat("=", 62 - strlen($f)), "\n\n";
+		}
+	}
 	foreach ($need_exec as $f) {
 		echo "\n-- === Begin: ", $f, " ", str_repeat("=", 65 - strlen($f)), "\n\n";
 		echo $diff->getScriptSql($f);
