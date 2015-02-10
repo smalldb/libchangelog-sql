@@ -8,9 +8,6 @@
 			"email": "jk@frozen-doe.net"
 		}
 	],
-	"extra": {
-		"plugin": "changelog_sql"
-	},
 	"autoload": {
 		"psr-4": { "Cascade\\ChangelogSql\\": "class/" }
 	},
