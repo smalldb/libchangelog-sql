@@ -6,12 +6,10 @@ Changelog.SQL is simple tool to maintain changes in database. It is based on
 directory of SQL scripts and simple SQL table where are recorded already
 executed scripts.
 
+This package contains a library meant to be integrated into your project. Just
+initialize whatever framework you use and call Cascade\ChangelogSql\CliMain::main()`.
 
-Configuration
--------------
-
-See core.json.php shipped with this plugin.
-
+See cascade plugin changelog_sql for usage example.
 
 Usage
 -----
@@ -20,7 +18,7 @@ When database is modified, place SQL script which performs this modification
 into `app/database/changelog.sql` directory and commit it. This script will
 remain there forever.
 
-After deploy on a server run `changelog-sql-diff.php` script and you will see
+After deploy on a server run your changelog-sql script and you will see
 SQL code required to reproduce all changes on the server.
 
 @warning You must set your client to stop on errors. Otherwise things go bad.
@@ -47,8 +45,7 @@ Init scripts
 ------------
 
 In `app/database/changelog.sql/init` directory can be placed scripts which
-should be executed every time something is changed in database. Place custom
-functions here.
+should be executed every time something is changed in database.
 
 
 

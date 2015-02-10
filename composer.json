@@ -1,7 +1,6 @@
 {
-	"name": "cascade/changelog_sql",
-	"type": "cascade-plugin",
-	"description": "Changelog.SQL is simple and elegant tool to maintain database changes.",
+	"name": "cascade/libchangelog_sql",
+	"description": "Changelog.SQL is simple and elegant tool to maintain database changes. This package is a library meant to be integrated into your project",
 	"license": "Apache-2.0",
 	"authors": [
 		{
@@ -16,8 +15,6 @@
 		"psr-4": { "Cascade\\ChangelogSql\\": "class/" }
 	},
 	"require": {
-		"cascade/composer-plugin": ">=1.1",
-		"cascade/core": ">=0.11"
 	}
 }
 
