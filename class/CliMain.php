@@ -27,7 +27,7 @@ class CliMain
 	/**
 	 * main()
 	 */
-	public static function main($changelog_dir, $changelog_table, $pdo)
+	public static function main($changelog_dir, $changelog_table, $pdo, $flush_buffer = true)
 	{
 		@ header('Content-Type: text/plain; encoding=utf-8');
 
@@ -43,12 +43,16 @@ class CliMain
 			"\n\n";
 
 		// Make sure there is no buffering.
-		@ ob_end_flush();
+		if ($flush_buffer) {
+			@ ob_end_flush();
+		}
 
 
 		// Show current version
 		echo "Checking for git ... ";
-		flush();
+		if ($flush_buffer) {
+			flush();
+		}
 		exec("git --version 2>/dev/null", $out, $ret);
 		if ($ret == 0) {
 			$git_version = str_replace('git version ', '', $out[0]);
@@ -73,7 +77,9 @@ class CliMain
 		// Load files
 		try {
 			echo "Loading changelog.sql directory ... ";
-			flush();
+			if ($flush_buffer) {
+				flush();
+			}
 			$n = $diff->loadChangelogDir($changelog_dir, $git_describe !== null);
 			printf("%4d files loaded.\n", $n);
 		}
@@ -85,7 +91,9 @@ class CliMain
 		// Load database
 		try {
 			echo "Loading about_changelog table ... ";
-			flush();
+			if ($flush_buffer) {
+				flush();
+			}
 			$n = $diff->loadChangelogTable($changelog_table);
 			printf("%6d records loaded.\n", $n);
 		}
@@ -98,7 +106,9 @@ class CliMain
 
 
 		// Find changes
-		flush();
+		if ($flush_buffer) {
+			flush();
+		}
 		$diff->compare();
 
 
