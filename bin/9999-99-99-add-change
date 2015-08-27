@@ -1,0 +1,54 @@
+#!/bin/sh
+#
+# 9999-99-99-add-change: Create new change set file in current directory.
+#
+# Symlink this file to your changelog.sql directory and then add a new
+# changeset using ./9999-99-99-add-change name-of-change
+#
+# Copyright (c) 2015, Josef Kufner  <josef@kufner.cz>
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+# check args
+if [ -z "$1" ]
+then
+    echo "Usage: $0 name-of-change" >&2
+    exit 1
+fi
+
+# build filename
+date="`date +'%Y-%m-%d'`"
+serial="`find . -maxdepth 1 -name "$date-*.sql" | wc -l`"
+file="`printf %s-%02d-%s.sql "$date" "$serial" "$1"`"
+
+# check if file exists
+if [ -e "$file" ]
+then
+    echo "$file: File already exists" >&2
+    exit 2
+fi
+
+# generate file
+cat >"$file"  <<eof
+
+
+--
+INSERT INTO \`about_changelog\`
+SET \`filename\` = '$file';
+
+eof
+
+# open editor
+exec $EDITOR "$file"
+
