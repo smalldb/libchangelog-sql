@@ -27,7 +27,7 @@ class CliMain
 	/**
 	 * main()
 	 */
-	public static function main($changelog_dir, $changelog_table, $pdo, $flush_buffer = true)
+	public static function main($changelog_dir, $changelog_table, $pdo, $flush_buffer = true, $ignore_changed_files = false)
 	{
 		@ header('Content-Type: text/plain; encoding=utf-8');
 
@@ -135,7 +135,7 @@ class CliMain
 			echo "\t", $f, "\n";
 		}
 
-		if (!empty($need_update) || !empty($need_exec)) {
+		if ((!empty($need_update) && !$ignore_changed_files) || !empty($need_exec)) {
 			echo "\n\n",
 				"If you had problems with files listed above and solved that manualy,\n",
 				"there are SQL queries to mark them as processed (refresh page before use):\n";
@@ -155,7 +155,7 @@ class CliMain
 		}
 
 		// If everything looks good, show query
-		if (empty($need_update) && !empty($need_exec)) {
+		if ((empty($need_update) || $ignore_changed_files) && !empty($need_exec)) {
 			echo "\n\n",
 				"If everything looks fine, just copy following SQL code to your database. This text\n",
 				"and everything above is commented out, so 'Ctrl+A, Ctrl+C' will do the job.\n*/\n\n";
