@@ -1,5 +1,5 @@
 /*!
-	@namespace Cascade::ChangelogSql
+	@namespace Smalldb::ChangelogSql
 
 tools to work with changelog.sql directory.
 

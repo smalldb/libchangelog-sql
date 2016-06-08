@@ -16,7 +16,7 @@
  *
  */
 
-namespace Cascade\ChangelogSql;
+namespace Smalldb\ChangelogSql;
 
 /**
  * CLI logic to execute ChangelogSqlDiff

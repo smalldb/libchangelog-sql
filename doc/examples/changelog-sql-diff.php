@@ -16,5 +16,5 @@ $changelog_dir     = dirname(__FILE__).'/app/database/changelog.sql'; // FIXME
 $changelog_table   = 'about_changelog';
 $pdo = new PDO(/* some initialization */);
 
-exit(Cascade\ChangelogSql\CliMain::main($changelog_dir, $changelog_table, $pdo));
+exit(Smalldb\ChangelogSql\CliMain::main($changelog_dir, $changelog_table, $pdo));
 

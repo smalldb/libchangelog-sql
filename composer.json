@@ -1,15 +1,15 @@
 {
-	"name": "cascade/libchangelog_sql",
+	"name": "smalldb/libchangelog_sql",
 	"description": "Changelog.SQL is simple and elegant tool to maintain database changes. This package is a library meant to be integrated into your project",
 	"license": "Apache-2.0",
 	"authors": [
 		{
 			"name": "Josef Kufner",
-			"email": "jk@frozen-doe.net"
+			"email": "josef@kufner.cz"
 		}
 	],
 	"autoload": {
-		"psr-4": { "Cascade\\ChangelogSql\\": "class/" }
+		"psr-4": { "Smalldb\\ChangelogSql\\": "class/" }
 	},
 	"require": {
 	}

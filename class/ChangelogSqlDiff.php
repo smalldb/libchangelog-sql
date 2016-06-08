@@ -16,7 +16,7 @@
  *
  */
 
-namespace Cascade\ChangelogSql;
+namespace Smalldb\ChangelogSql;
 
 /**
  * Read changelog.sql directory and compare it with database.

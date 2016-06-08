@@ -7,7 +7,7 @@ directory of SQL scripts and simple SQL table where are recorded already
 executed scripts.
 
 This package contains a library meant to be integrated into your project. Just
-initialize whatever framework you use and call Cascade\ChangelogSql\CliMain::main()`.
+initialize whatever framework you use and call Smalldb\ChangelogSql\CliMain::main()`.
 
 See cascade plugin changelog_sql for usage example.
 
