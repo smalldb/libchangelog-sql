@@ -12,6 +12,9 @@
 		"psr-4": { "Smalldb\\ChangelogSql\\": "class/" }
 	},
 	"require": {
-	}
+	},
+    "require-dev": {
+        "smalldb/doc-tools": "dev-master"
+    }
 }
 
